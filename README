@@ -1,0 +1,7 @@
+runnerplus-uploader
+by: Vinod Kurup, vinod@kurup.com
+
+This simple python script searches for an iPod nano with NikePlus files on
+it. If it finds one, it uploads all files to the runnerplus.com website. That's it.
+
+Comments welcome.
