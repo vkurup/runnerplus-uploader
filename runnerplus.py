@@ -5,27 +5,46 @@ import urllib
 import os
 from os.path import join
 import subprocess
+import ConfigParser
+import shutil
 
-# Edit these values
-login_name = "youremail@example.com"
-login_pass = "yourpassword"
-
-# Don't edit these values
 url = "http://www.runnerplus.com/"
-widget_version = "0.01"
-found_ipod = False
+script_version = "0.02"
+sync_successful = False
+config_filename = join(os.path.expanduser("~"), ".runnerplusrc")
 
 debug = True
 testing = False
 
 def push_data():
-    global found_ipod
     xmlfile = None
+    global sync_successful
+    global config_filename
 
-    uid = validate_user()
+    # check for new versions of the script
+    new_version = version_check()
+    if new_version > script_version:
+        print "A new version of this script is now available. Please download it."
+
+    # read the config file
+    config = ConfigParser.SafeConfigParser({'dirname': '.runnerplus'})
+    config_found = config.read(config_filename)
+
+    if not config_found:
+        raise StandardError("Config File not found. See README file for instructions on creating a config gile")
+
+    email = config.get('Login','email')
+    password = config.get('Login','password')
+    backupdir = join(os.path.expanduser("~"), config.get('Backup', 'dirname'), 'synced')
+
+    uid = validate_user(email, password)
     if debug: print "uid == %s." % uid
     if uid == "0":
         raise StandardError("authentication failed")
+
+    # create the backup directory, if not present
+    if not os.path.exists(backupdir):
+        os.makedirs(backupdir)
     
     mount_point = get_ipod_mount()
     path = join(mount_point, "iPod_Control", "Device", "Trainer", "Workouts", "Empeds")
@@ -39,22 +58,30 @@ def push_data():
         filelist = glob.glob(join(path, '*', '*', '*-*.xml'))
         for xmlfile in filelist:
             if debug: print "debug found: " + xmlfile
-            post_to_runnerplus(uid, xmlfile)
-        found_ipod = True
+            post_to_runnerplus(uid, xmlfile, backupdir)
+        sync_successful = True
 
-def post_to_runnerplus(uid, fullpath):
-    f = open(fullpath)
-    data = f.read()
-    f.close()
-    v = "Python uploader " + widget_version + " (Linux)"
-    post_data = urllib.urlencode({'uid' : uid, 'v' : v, 'data' : data })
-    post_url = url + "profile/api_postdata.asp"
-    if not testing: 
-        contents = urllib.urlopen(post_url, post_data).read()
+def post_to_runnerplus(uid, fullpath, backupdir):
+    basename = os.path.basename(fullpath)
+    if os.path.exists(join(backupdir, basename)):
+        if debug: print "File has been previously synced: " + basename
     else:
-        contents = "Testing"
+        f = open(fullpath)
+        data = f.read()
+        f.close()
 
-    if debug: print contents
+        v = "Python uploader " + script_version + " (Linux)"
+        post_data = urllib.urlencode({'uid' : uid, 'v' : v, 'data' : data })
+        post_url = url + "profile/api_postdata.asp"
+        if not testing: 
+            try:
+                contents = urllib.urlopen(post_url, post_data).read()
+                # move to backup folder
+                shutil.copy(fullpath, backupdir)
+        else:
+            contents = "Testing"
+            
+        if debug: print contents
     
 def version_check():
     print "checking for updates to script..."
@@ -64,15 +91,10 @@ def version_check():
     #print htmlSource
     return "0.01"
 
-def validate_user():
-    n = login_name
-    p = login_pass
-    new_version = version_check()
-    if new_version > widget_version:
-        print "A new version of this script is now available. Please download it."
-    if debug: print "validating user " + n + "..."
+def validate_user(email, password):
+    if debug: print "validating user " + email + " ..."
     user_url = url + "profile/api_validateuser.asp"
-    post_data = urllib.urlencode({'n' : n, 'p' : p })
+    post_data = urllib.urlencode({'n' : email, 'p' : password })
     if not testing:
         contents = urllib.urlopen(user_url, post_data)
         uid = contents.read()
@@ -95,7 +117,7 @@ def get_ipod_mount():
 
 if __name__ == "__main__":
     push_data()
-    if found_ipod:
+    if sync_successful:
         print "Successfully synced to runnerplus"
     else:
         print "Sync was unsuccessful"

@@ -1,0 +1,6 @@
+[Login]
+email = myemail@example.com
+password = mysecretpassword
+
+[Backup]
+dirname = .runnerplus

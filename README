@@ -1,7 +1,49 @@
 runnerplus-uploader
 by: Vinod Kurup, vinod@kurup.com
+version: 0.02
 
-This simple python script searches for an iPod nano with NikePlus files on
-it. If it finds one, it uploads all files to the runnerplus.com website. That's it.
+WHAT IS THIS?
+-------------
 
-Comments welcome.
+This python script searches for an iPod nano with NikePlus files on it. If it finds one, it uploads all the workout files to the specified account on the runnerplus.com website. It also copies each file that is successfully synced to a local directory. The second time that this tool is run, it will check each iPod file against the local directory and only upload new files to runnerplus.com.
+
+I copied the code from the official runnerplus Yahoo widget. Our script uses less bandwith than the Yahoo widget since it only uploads files which have not been synced before.
+
+REQUIREMENTS
+------------
+
+- a runnerplus.com account (they're free)
+- a iPod nano with the NikePlus kit
+- Python (tested on linux python 2.5, not sure if it works on other platforms or versions)
+
+HOW DO I USE THIS?
+------------------
+
+1) Download the script and stick it in your ~/bin/ folder.
+
+2) Create a config file to store your runnerplus login info. This file must be named ~/.runnerplusrc. You can use the sample file included in this distribution. 
+
+     $ cp sample-runnerplusrc ~/.runnerplusrc
+     
+3) Edit .runnerplusrc with the email and password that you use to login the runnerplus.com website.
+
+4) Run the script. 
+
+     $ python ~/bin/runnerplus.py 
+
+5) You can make it executable if you like (chmod +x ~/bin/runnerplus.py)
+
+
+PROBLEMS
+--------
+
+Contact me (vinod@kurup.com) and I'll do my best to help out. This is the first python code that I've created so I'm sure that it's not pretty. Constructive comments welcome!
+
+This code does not try to write anything to your iPod, so there is no danger of anything very bad happening.
+
+This script is not associated with runnerplus.com in any way. My powerbook HD died, so I just wanted a way to upload files to runnerplus from my Linux box. 
+
+LICENSE
+-------
+
+This is released under the GPL.
