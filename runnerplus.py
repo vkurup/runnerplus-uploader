@@ -3,6 +3,7 @@
 import glob
 import urllib
 import os
+import sys
 from os.path import join
 import subprocess
 import ConfigParser
@@ -31,11 +32,12 @@ def push_data():
     config_found = config.read(config_filename)
 
     if not config_found:
-        raise StandardError("Config File not found. See README file for instructions on creating a config gile")
+        raise StandardError("Config File not found. See README file for instructions on creating a config file")
 
     email = config.get('Login','email')
     password = config.get('Login','password')
     backupdir = join(os.path.expanduser("~"), config.get('Backup', 'dirname'), 'synced')
+    if debug: print "config info found for email:" + email
 
     uid = validate_user(email, password)
     if debug: print "uid == %s." % uid
@@ -44,9 +46,11 @@ def push_data():
 
     # create the backup directory, if not present
     if not os.path.exists(backupdir):
+        if debug: print "backup dir not found, so creating it"
         os.makedirs(backupdir)
     
     mount_point = get_ipod_mount()
+    if debug: print "iPod found at " + mount_point
     path = join(mount_point, "iPod_Control", "Device", "Trainer", "Workouts", "Empeds")
     if os.path.isdir(path):
         stats = os.statvfs(path)
@@ -66,6 +70,7 @@ def post_to_runnerplus(uid, fullpath, backupdir):
     if os.path.exists(join(backupdir, basename)):
         if debug: print "File has been previously synced: " + basename
     else:
+        if debug: print "Syncing file: " + basename
         f = open(fullpath)
         data = f.read()
         f.close()
@@ -77,7 +82,11 @@ def post_to_runnerplus(uid, fullpath, backupdir):
             try:
                 contents = urllib.urlopen(post_url, post_data).read()
                 # move to backup folder
+                if debug: print "Sync successful. Back up file:" + basename
                 shutil.copy(fullpath, backupdir)
+            except:
+                contents = sys.exc_info()[0]
+                print contents
         else:
             contents = "Testing"
             
