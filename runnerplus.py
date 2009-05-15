@@ -8,9 +8,10 @@ from os.path import join
 import subprocess
 import ConfigParser
 import shutil
+import string
 
 url = "http://www.runnerplus.com/"
-script_version = "0.02"
+script_version = 0.02
 sync_successful = False
 config_filename = join(os.path.expanduser("~"), ".runnerplusrc")
 
@@ -75,7 +76,7 @@ def post_to_runnerplus(uid, fullpath, backupdir):
         data = f.read()
         f.close()
 
-        v = "Python uploader " + script_version + " (Linux)"
+        v = "Python uploader " + str(script_version) + " (Linux)"
         post_data = urllib.urlencode({'uid' : uid, 'v' : v, 'data' : data })
         post_url = url + "profile/api_postdata.asp"
         if not testing: 
@@ -94,11 +95,14 @@ def post_to_runnerplus(uid, fullpath, backupdir):
     
 def version_check():
     print "checking for updates to script..."
-    #sock = urllib.urlopen(url + "profile/api_version.asp")
-    #htmlSource = sock.read()
-    #sock.close()
-    #print htmlSource
-    return "0.01"
+    sock = urllib.urlopen("http://www.kurup.org/software/runnerplus/version")
+    htmlSource = sock.read()
+    sock.close()
+    try:
+        version = string.atof(htmlSource)
+    except:
+        version = 0
+    return version
 
 def validate_user(email, password):
     if debug: print "validating user " + email + " ..."
