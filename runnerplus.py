@@ -121,7 +121,8 @@ def get_ipod_mount():
     devices = output.split('\n')[1:]
     for line in devices:
         if line:
-            mount = line.split()[5]
+            # account for mountpoints with spaces in them
+            mount = ' '.join(line.split()[5:])
             nike = join(mount, "iPod_Control", "Device", "Trainer", "Workouts", "Empeds")
             if os.path.exists(nike):
                 return mount
