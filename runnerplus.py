@@ -72,9 +72,15 @@ def post_to_runnerplus(uid, fullpath, backupdir):
         if debug: print "File has been previously synced: " + basename
     else:
         if debug: print "Syncing file: " + basename
-        f = open(fullpath)
-        data = f.read()
-        f.close()
+        try:
+            f = open(fullpath)
+            data = f.read()
+            f.close()
+        except IOError as (errno, strerror):
+            print "reading file: I/O error({0}): {1}".format(errno, strerror)
+        except:
+            print "reading file: Unexpected Error:", sys.exc_info()[0]
+            raise
 
         v = "Python uploader " + str(script_version) + " (Linux)"
         post_data = urllib.urlencode({'uid' : uid, 'v' : v, 'data' : data })
@@ -85,9 +91,11 @@ def post_to_runnerplus(uid, fullpath, backupdir):
                 # move to backup folder
                 if debug: print "Sync successful. Back up file:" + basename
                 shutil.copy(fullpath, backupdir)
+            except IOError as (errno, strerror):
+                print "I/O error({0}): {1}".format(errno, strerror)
             except:
-                contents = sys.exc_info()[0]
-                print contents
+                print "Unexpected Error: ", sys.exc_info()[0]
+                raise
         else:
             contents = "Testing"
             
